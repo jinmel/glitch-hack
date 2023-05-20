@@ -1,0 +1,3 @@
+[submodule "contracts/bifrost/lib/forge-std"]
+	path = contracts/bifrost/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
