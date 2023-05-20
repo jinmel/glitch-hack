@@ -47,7 +47,7 @@ def export(torch_model, input_shape=None, input_array=None, onnx_filename="netwo
                 output_data = [((o).detach().numpy()).reshape([-1]).tolist() for o in torch_out])
 
     # Serialize data into file:
-    json.dump( data, open( input_filename, 'w' ) )
+    json.dump(data, open(input_filename, 'w'))
 
 if __name__ == "__main__":
     from torch import nn

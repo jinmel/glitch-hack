@@ -7,6 +7,7 @@ from absl import logging
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 import tqdm
 import numpy as np
 import pandas as pd
@@ -14,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 
 from models import SimpleModel
+from ezkl import export
 
 
 FLAGS = flags.FLAGS
@@ -68,15 +70,17 @@ def load_data(csv_filename):
 def train(model, X_train, y_train, X_val, y_val):
     # loss function and optimizer
     X_train = torch.from_numpy(X_train).type(torch.float32)
-    y_train = torch.from_numpy(y_train).type(torch.float32).unsqueeze(1)
+    # y_train = F.one_hot(torch.from_numpy(y_train)).type(torch.float32)
+    y_train = torch.from_numpy(y_train).type(torch.float32).reshape(-1, 1)
     X_val = torch.from_numpy(X_val).type(torch.float32)
-    y_val = torch.from_numpy(y_val).type(torch.float32).unsqueeze(1)
+    # y_val = F.one_hot(torch.from_numpy(y_val)).type(torch.float32)
+    y_val = torch.from_numpy(y_val).type(torch.float32).reshape(-1, 1)
 
     loss_fn = nn.BCELoss()  # binary cross entropy
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-    n_epochs = 25   # number of epochs to run
-    batch_size = 10  # size of each batch
+    n_epochs = 10   # number of epochs to run
+    batch_size = 32  # size of each batch
     batch_start = torch.arange(0, len(X_train), batch_size)
 
     # Hold the best model
@@ -85,7 +89,7 @@ def train(model, X_train, y_train, X_val, y_val):
 
     for epoch in range(n_epochs):
         model.train()
-        with tqdm.tqdm(batch_start, unit="batch", mininterval=0, disable=True) as bar:
+        with tqdm.tqdm(batch_start, unit="batch", mininterval=0) as bar:
             bar.set_description(f"Epoch {epoch}")
             for start in bar:
                 # take a batch
@@ -103,7 +107,6 @@ def train(model, X_train, y_train, X_val, y_val):
                 acc = (y_pred.round() == y_batch).float().mean()
                 bar.set_postfix(
                     loss=float(loss),
-                    acc=float(acc)
                 )
         # evaluate accuracy at end of each epoch
         model.eval()
@@ -121,12 +124,15 @@ def train(model, X_train, y_train, X_val, y_val):
 def main(_):
     X, y = load_data('./transaction_dataset.csv')
     X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size = 0.2)
+            X, y, test_size=0.2)
     oversample = SMOTE()
     X_train_resample, y_train_resample = oversample.fit_resample(
             X_train, y_train)
     model = SimpleModel()
-    train(model, X_train_resample, y_train_resample, X_test, y_test)
+    best_acc = train(model, X_train_resample, y_train_resample, X_test, y_test)
+    print(f'best_model acc: {best_acc}')
+    logging.info('Writing onnx file to %s', FLAGS.output)
+    export(model, input_shape=[16], onnx_filename=FLAGS.output)
 
 
 if __name__ == '__main__':
