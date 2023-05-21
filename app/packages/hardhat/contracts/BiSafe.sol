@@ -6,21 +6,13 @@ import "./Verifier.sol";
 // import "@openzeppelin/contracts/access/Ownable.sol";
 // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
 
-contract YourContract {
+contract BiSafe {
   Verifier private verifier = new Verifier();
 
-  function safeSend(address payable _to,
-                    uint256[] memory pubInputs,
-                    bytes memory proof) public payable {
+  function safeTransfer(address payable _to,
+                        uint256[] memory pubInputs,
+                        bytes memory proof) public payable {
     verifier.verify(pubInputs, proof);
+    // You can write your transfer function here.
   }
-
-
-  constructor() payable {
-    // what should we do on deploy?
-  }
-
-  // to support receiving ETH by default
-  receive() external payable {}
-  fallback() external payable {}
 }

@@ -32,6 +32,13 @@ export const NETWORKS = {
     blockExplorer: "",
     rpcUrl: localRpcUrl,
   },
+  bifrost: {
+    name: "bifrost",
+    color: "#efefef",
+    chainId: 49088,
+    rpcUrl: "https://public-01.testnet.thebifrost.io/rpc",
+    blockExplorer: "https://explorer.testnet.thebifrost.io/",
+  },
   mainnet: {
     name: "mainnet",
     color: "#ff8b9e",
